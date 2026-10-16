@@ -582,11 +582,6 @@ textarea {
   color: #34533d;
   margin: 0;
 }
-.restart-trial {
-  padding: 5px 8px;
-  font-size: 11px;
-  margin-top: 8px;
-}
 .analysis-status,
 .error-text {
   font-size: 12px;

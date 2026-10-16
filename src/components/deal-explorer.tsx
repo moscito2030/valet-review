@@ -108,8 +108,6 @@ export function DealExplorer({
   const [perspective, setPerspective] = useState<Seat | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [selection, setSelection] = useState('');
-  const [trialSeat, setTrialSeat] = useState<Seat>('N');
-  const [trialStrain, setTrialStrain] = useState('S');
   const [history, setHistory] = useState<PlayState[]>([]);
   const [future, setFuture] = useState<Future | null>(null);
   const [error, setError] = useState('');
@@ -217,12 +215,12 @@ export function DealExplorer({
       alive = false;
     };
   }, [state, strain]);
-  function toggle(seat: Seat, trump: string, restart = false) {
+  function toggle(seat: Seat, trump: string) {
     // Clearing the selected row must not overwrite the manual DD choice in the result effect.
     detachResult.current = !!result;
     onManualTrial?.();
     const key = seat + trump;
-    if (selection === key && !restart) {
+    if (selection === key) {
       setSelection('');
       setHistory([]);
       setFuture(null);
@@ -596,39 +594,6 @@ export function DealExplorer({
           )}
         </section>
       </div>
-      <div className="trial-start">
-        <label>
-          莊家
-          <select
-            aria-label="試打莊家"
-            value={trialSeat}
-            onChange={(e) => setTrialSeat(e.target.value as Seat)}
-          >
-            {seats.map((s) => (
-              <option key={s} value={s}>
-                {seatNames[s]} {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          花色
-          <select
-            aria-label="試打花色"
-            value={trialStrain}
-            onChange={(e) => setTrialStrain(e.target.value)}
-          >
-            {strains.map((s) => (
-              <option key={s} value={s}>
-                {symbols[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" onClick={() => toggle(trialSeat, trialStrain, true)}>
-          自選試打
-        </button>
-      </div>
       {lead && !validLead && <p className="error-text">首攻 {lead} 與牌型不符，請核對紀錄。</p>}
       {state && (
         <div className="play-keyboard">
@@ -663,16 +628,6 @@ export function DealExplorer({
               <X size={16} />
             </button>
           </div>
-          <button
-            type="button"
-            className="restart-trial"
-            onClick={() => {
-              setFuture(null);
-              setHistory([initialPlay(board, declarer)]);
-            }}
-          >
-            重新試打
-          </button>
           <div className="play-context">
             <span>
               {tableSelected && result ? actualContract : `${declarer} ${symbols[strain]}`} · NS{' '}
