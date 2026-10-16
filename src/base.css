@@ -175,10 +175,6 @@ main {
   font-weight: 600;
   margin-bottom: 10px;
 }
-.intro-divider {
-  margin: 0 12px;
-  color: #bcc6ba;
-}
 .muted {
   color: var(--muted);
 }
@@ -639,9 +635,6 @@ textarea {
   }
   .intro p:last-child {
     font-size: 11px;
-  }
-  .intro-divider {
-    margin: 0 6px;
   }
   .toolbar {
     width: 100%;

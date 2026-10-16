@@ -193,7 +193,6 @@ export default function App() {
             <h1>{data.title}</h1>
             <p className="muted">
               {data.boards.length} 副牌 · {data.results.length} 筆成績
-              <span className="intro-divider">／</span>比較結果，重新探索出牌。
             </p>
           </div>
           <div className="toolbar">
