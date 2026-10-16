@@ -112,4 +112,6 @@ npm run build
 
 ## 共用牌局檢視器
 
-牌桌、試打、鍵盤輸入、分析 worker 與樣式使用 `@valet/deal-viewer`，由 Valet 的 `packages/deal-viewer/` 集中維護。本倉庫攜帶 `vendor/` 的固定版本套件，可獨立安裝、建置及部署。不要在本專案複製修改檢視器實作；於 Valet 升版後執行 `npm run viewer:sync -- ../valet-review` 更新本專案，再測試並提交套件與鎖定檔。
+本專案使用獨立 Valet Viewer 倉庫維護的 `@valet/deal-viewer`，透過 vendor/ 內固定版本打包檔安裝。沒有指向其他倉庫的本機連結，因此可獨立 npm ci、建置與部署。
+
+修改檢視器請到 Valet Viewer，升版並執行 `npm run sync -- ../alternative_online_bridge ../valet-review`。三個專案都需驗證並各自 commit，未經使用者指定不 push。
