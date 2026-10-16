@@ -1,106 +1,116 @@
 # Valet Review
 
-把賽後的「為什麼差這麼多分？」變成可以親手探索的牌局。
+**English** | [繁體中文](README.zh-TW.md)
 
-Valet Review 是獨立的橋牌賽後檢討工具。在瀏覽器裡看四家手牌、比較同一副牌的各桌成績，再選一份合約重新試打。單副牌可透過網址分享，對方不用登入，也不用連接原比賽的資料庫。
+Turn “Why were the scores so different?” into a deal you can explore yourself.
 
-## 能做什麼
+Valet Review is a standalone bridge post-game review tool. View all four hands, compare results from different tables playing the same board, and try alternative lines of play. Share a single board through a link—no account or connection to the original tournament database required.
 
-- **集中檢討一整組牌**：匯入單副或多副 PBN，切換牌號；不同場次相同牌號可以分組管理。
-- **找出同副成績的差異**：查看桌次、選手、合約、首攻、原始分，切換 Butler IMP、Cross IMP、MP；勾選兩桌直接比較分差與 IMP。
-- **從結果回到出牌**：選擇一桌合約開始試打，依輪次與跟花規則出牌，回上一步、重打或切換方位視角。原始成績保持不變。
-- **用分析檢查想法**：雙夢家最佳墩數、Par 與 LoTT 在瀏覽器的背景執行緒計算；出牌時顯示後續最佳墩數。
-- **分享一副值得討論的牌**：連結可包含全部桌次、選定桌次或只有牌型；預設移除姓名與原始桌名。
-- **保留自己的檢討資料**：本機儲存、完整 JSON 備份、PBN 牌型與成績 CSV 匯出。
+## What you can do
 
-資料在瀏覽器處理，沒有帳號、資料庫或上傳端點。程式首次開啟提供三副可操作的示範牌局。
+- **Review a collection of boards:** import one or more deals from PBN, switch board numbers, and distinguish boards from different sessions using groups.
+- **Compare results across tables:** inspect contracts, opening leads and raw scores; switch between Butler IMP, Cross IMP and Matchpoints. Select two tables for a direct score and IMP comparison. Select a table to see its player names on the deal viewer.
+- **Explore the play:** start from a table's contract, play legal cards, undo moves and switch viewing perspectives. Trial play never changes the recorded result.
+- **Check ideas with analysis:** double-dummy tricks, Par and the Law of Total Tricks (LoTT) are calculated in a browser worker. All-hands trial play can show double-dummy outcomes for available cards.
+- **Share a board:** include all table results, a selected table, or just the deal. Names and original table labels are omitted by default.
+- **Keep your review:** save locally, back up the full collection as JSON, or export deals as PBN and results as CSV.
 
-## 開始使用
+Data is processed in the browser. There is no account system, database or upload endpoint. A first visit without saved data or a share link opens three playable example boards. The application interface currently uses Traditional Chinese; these language links switch the documentation only.
 
-需要 Node.js 22.12 或更新版本。
+## Get started
+
+Requires Node.js 22.12 or later.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-開啟 `http://127.0.0.1:3001`。不會占用 Valet 使用的 3000 埠。
+Open `http://127.0.0.1:3001`. This leaves port 3000 available for Valet.
 
-1. 按「匯入」，選擇 PBN，驗證預覽後確認。
-2. 再匯入成績 CSV，或直接匯入一份完整檢討 JSON。
-3. 在成績列表選擇桌次，載入該桌的合約與姓名。
-4. 點牌出牌；點方位切換視角；點最佳墩數表可自選合約花色與莊家。
-5. 按「分享此副」，產生連結；或「匯出」保存完整資料。
+1. Choose **Import (匯入)**, select PBN, validate the preview, then confirm.
+2. Import a results CSV, or load a complete review JSON instead.
+3. Select a table result to load its contract and player names.
+4. Click cards to play, click a seat header to change perspective, or choose a declarer and strain from the double-dummy table.
+5. Use **Share this board (分享此副)** to create a link, or **Export (匯出)** to keep a file.
 
-本機儲存需主動按「儲存檢討」。匯入會取代目前開啟的資料；CSV 只取代整份成績清單，牌型保留。需要保留另一份檢討時，請先匯出 JSON。
+## Saving and removing boards
 
-「移除此牌」位於「儲存檢討」旁。確認後移除目前牌型與其各桌成績，並將剩餘檢討一併儲存到本機（取代原先的儲存）。移除最後一副後保留空白檢討，重新開啟也不會自動載回示範牌。若瀏覽器拒絕儲存，移除不會生效。
+Use **Save review (儲存檢討)** to save explicitly to browser local storage. Saved data belongs to that browser and website origin. Trial-play steps are temporary and are not saved.
 
-## 成績 CSV
+Importing PBN or JSON replaces the open collection. Importing CSV replaces the entire results list while retaining the deals. Export JSON first if you need to keep another review.
 
-基本範例：
+**Remove this board (移除此牌)** sits beside Save review. After confirmation, it removes the current deal and all its results, then saves the remaining collection locally, replacing the previous save. Removing the last board leaves an empty review that stays empty after reloading. If the browser rejects the save, removal does not take effect.
+
+## Results CSV
 
 ```csv
 board,table,level,strain,doubled,declarer,tricks,lead,status,N,E,S,W
-1,第1桌,4,S,1,N,10,H2,played,北家,東家,南家,西家
-1,第2桌,3,NT,1,S,9,,played,,,,
-1,第3桌,,,,,,,cancelled,,,,
+1,Table 1,4,S,1,N,10,H2,played,North,East,South,West
+1,Table 2,3,NT,1,S,9,,played,,,,
+1,Table 3,,,,,,,cancelled,,,,
 ```
 
-- `board` 是牌號；重複牌號需填 `boardId`，或加上 `group` 區分。`boardId` 可從匯出的 CSV／JSON 取得。
-- `level`：0–7；Pass 填 0，`tricks=0`、`doubled=1`。
-- `strain`：S、H、D、C、NT；`doubled`：1、2、4；`declarer`：N、E、S、W。
-- `tricks`：莊家實得墩數 0–13。`lead` 可空白，或填如 SA、HT。
-- `status`：played 或 cancelled。Cancelled 可不填合約欄位，不參與計分比較。舊檔的 average 會讀成 cancelled，匯出統一使用 cancelled。
-- `nsScore` 選填；未提供時依合約與身價計算，提供時視為該桌獲判的 NS 原始分。
-- `assignmentId`、`id` 可保存原系統的識別碼；N/E/S/W 可帶入入座姓名。
-- CSV、PBN 與檢討 JSON 檔案上限皆為 2 MB。每份資料最多 256 副、10,000 筆成績。
+- `board`: board number. For repeated numbers, supply `boardId` or distinguish them using `group`. Exported CSV and JSON include board IDs.
+- `level`: 0–7. For a passed-out board, use `level=0`, `tricks=0` and `doubled=1`.
+- `strain`: S, H, D, C or NT. `doubled`: 1, 2 or 4. `declarer`: N, E, S or W.
+- `tricks`: declarer's total tricks, from 0 to 13. `lead`: optional opening lead such as SA or HT.
+- `status`: played or cancelled. Cancelled rows may omit contract fields and are excluded from scoring comparisons. Legacy `average` values are read as `cancelled`; exports consistently use `cancelled`.
+- `nsScore`: optional. If omitted, the score is calculated from the contract and vulnerability. If supplied, it is treated as the table's assigned NS raw score.
+- `assignmentId` and `id`: optional identifiers from the source system. N/E/S/W contain player names.
+- CSV, PBN and review JSON files are limited to 2 MB. A collection supports up to 256 boards and 10,000 results.
 
-完整 JSON 是版本化的 `version: 1` 格式，包含 `title`、`boards`、`results` 及選定牌局／桌次。請用「匯出完整檢討 JSON」取得可直接重匯的範例；驗證規則在 `src/lib/model.ts`。
+## PBN and JSON
 
-PBN 支援完整 Deal、Board、Dealer、Vulnerable、BridgeboardGroup，以及每筆紀錄的 Contract／Declarer／Result 與四家姓名。相同牌型的重複 Board 紀錄會合併，成績各自保留；相同牌號但不同牌型需有不同分組。PBN 匯出只保存牌型，保存全部結果請用 JSON。
+Review JSON uses the versioned `version: 1` format, including `title`, `boards`, `results` and optional board/table selection. Export a complete review JSON for a directly reusable example. Validation is defined in [src/lib/model.ts](src/lib/model.ts).
 
-## 比較公式
+PBN supports complete Deal, Board, Dealer, Vulnerable and BridgeboardGroup tags, plus Contract, Declarer, Result and player names per record. Repeated board records with the same deal are merged while retaining their results. Different deals with the same board number require different groups. PBN export contains deals only; use JSON to preserve all results.
 
-全部數值以 NS 為方向，Cancelled 排除。少於兩筆有效成績時不顯示比較分。
+## Comparison formulas
 
-| 項目 | 計算方式 |
+All values use the NS perspective and exclude cancelled results. Comparison scores are not shown when fewer than two valid results are available.
+
+| Metric | Calculation |
 | --- | --- |
-| Butler IMP | 全部有效桌次平均原始分，四捨五入至 10 分，作為 Datum；各桌與 Datum 的差轉為 IMP。含本桌、不去頭尾。 |
-| Cross IMP | 與其他每一桌逐一轉為 IMP，再取平均。 |
-| MP | 勝一桌 2 分、平手 1 分；百分比除以可得最高分。 |
-| 兩桌對照 | 第一桌 NS 原始分減第二桌 NS 原始分，再換算 IMP。 |
+| Butler IMP | Average all valid raw scores and round to the nearest 10 for the datum; convert each table's difference from that datum to IMPs. Includes the table itself; no trimming. |
+| Cross IMP | Convert the difference against each other table to IMPs, then average. |
+| Matchpoints | Two points for each lower score, one for a tie; divide by the maximum available points for the percentage. |
+| Head-to-head | Subtract the second table's NS raw score from the first, then convert to IMPs. |
 
-## 試打與分析
+## Trial play and analysis
 
-試打是獨立的暫存狀態，並非實際比賽的出牌重播。鍵盤可按 2–9、T、J、Q、K、A；只有一張合法牌符合該點數時才出牌。同點數有多張時，先按花色 S／H／D／C，再按點數（例如 HT）；Esc 清除花色選擇，Backspace 回上一步。單家視角首攻後顯示夢家；全手牌視角保留已出牌位置並淡化表示。
+Trial play is temporary exploration, not a replay of the recorded game. Press 2–9, T, J, Q, K or A to play when exactly one legal card matches. If several cards share a rank, enter the suit S/H/D/C first, then the rank—for example, HT. Esc clears the suit prefix; Backspace undoes a move.
 
-雙夢家分析使用 `bridge-dds`。引擎知道四家牌型；視角隱藏是檢討功能，不是安全隔離。下載的依賴授權一併保留於建置輸出的 `vendor/dds/LICENSE`。牌桌、試打與基本計分程式源自 Valet，本專案可獨立執行，不需原倉庫。
+In a single-seat perspective, dummy becomes visible after the opening lead. Both single-seat and all-hands views retain played cards in their original positions, faded and disabled.
 
-## 分享與部署
+Double-dummy analysis uses `bridge-dds` and knows all four hands. Hiding hands is a review feature, not an access-control boundary. The engine's license is included in the build at `vendor/dds/LICENSE`.
 
-連結使用網址 fragment（`#review=1.…`）攜帶 gzip 壓縮的單副資料，沒有伺服器儲存期限。任何拿到連結的人都能讀取其中四家手牌；預設不含姓名、原桌名、集合名稱與分組名稱。試打步驟不包含於連結。超過長度上限可改分享單桌、僅牌型，或改用 JSON 檔。
+## Sharing and deployment
+
+Share links carry gzip-compressed single-board data in the URL fragment (`#review=1.…`), without server-side storage or expiry. Anyone with the link can access all four hands. Names, original table labels, collection titles and group names are omitted by default. Trial-play steps are not included. If a link exceeds the length limit, share fewer results, share only the deal, or export JSON.
 
 ```sh
 npm run build
 npm run preview
 ```
 
-將 `dist/` 部署至靜態網站主機即可。Vercel 選 Vite，建置指令 `npm run build`、輸出資料夾 `dist`；不需要環境變數或資料庫。相對路徑資源也可放在子目錄，包含 GitHub Pages。正式分享請使用部署後的公開 HTTPS 網址；127.0.0.1 連結只適用本機。
+Deploy `dist/` to a static host. For Vercel, use the Vite preset, `npm run build` as the build command and `dist` as the output directory. Review needs no environment variables or database. Commit `vendor/` and `package-lock.json` along with the source so the pinned viewer package is available during installation.
 
-## 架構與檢查
+Relative asset paths support hosting under a subdirectory, including GitHub Pages. Use the deployed public HTTPS URL for sharing; a 127.0.0.1 link only works on the recipient's own computer.
 
-React + TypeScript + Vite，純前端靜態網站。
+## Architecture and checks
 
-| 模組 | 職責 |
+React + TypeScript + Vite, delivered as a static frontend.
+
+| Module | Responsibility |
 | --- | --- |
-| `src/lib/model.ts` | 牌局與結果模型、匯入／分享邊界驗證 |
-| `src/lib/imports.ts` | PBN、CSV、JSON 轉換 |
-| `src/lib/scoring.ts` | 合約分、IMP、跨桌比較 |
-| `src/lib/play.ts` | 合法出牌、吃墩、可見手牌與撤回 |
-| `src/lib/share.ts` | 單副快照、姓名移除、壓縮與大小限制 |
-| `src/components/deal-explorer.tsx` | 四家手牌、試打介面與分析 Worker 互動 |
-| `public/dds-worker.js` | 背景雙夢家計算 |
+| `src/lib/model.ts` | Board/result models and import/share validation |
+| `src/lib/imports.ts` | PBN, CSV and JSON conversion |
+| `src/lib/scoring.ts` | Contract scores, IMPs and cross-table comparisons |
+| `src/lib/play.ts` | Re-exports shared Viewer play rules |
+| `src/lib/share.ts` | Single-board snapshots, identity removal, compression and size limits |
+| `src/components/deal-explorer.tsx` | Re-exports the shared Viewer component |
+| `public/dds-worker.js` | Double-dummy worker copied from the Viewer package |
 
 ```sh
 npm test
@@ -108,10 +118,16 @@ npm run typecheck
 npm run build
 ```
 
-目前不處理叫牌／出牌紀錄的完整重播、不平衡合約的雙邊判罰與帳號雲端同步。從 Valet 匯入請使用完整牌型 PBN 與一般成績 CSV；含 splitNS／splitEW 的不平衡合約會明確拒絕，避免當成普通成績誤算。
+Full auction/play-record replay, split-contract adjustments and account-based cloud sync are not currently supported. To import from Valet, use complete-deal PBN and ordinary results CSV. Rows containing splitNS/splitEW adjustments are explicitly rejected rather than treated as ordinary results.
 
-## 共用牌局檢視器
+## Shared deal viewer
 
-本專案使用獨立 Valet Viewer 倉庫維護的 `@valet/deal-viewer`，透過 vendor/ 內固定版本打包檔安裝。沒有指向其他倉庫的本機連結，因此可獨立 npm ci、建置與部署。
+The independent **Valet Viewer** repository maintains `@valet/deal-viewer`. Review installs a pinned archive from `vendor/`; it has no local link to another repository and can be installed, built and deployed independently.
 
-修改檢視器請到 Valet Viewer，升版並執行 `npm run sync -- ../alternative_online_bridge ../valet-review`。三個專案都需驗證並各自 commit，未經使用者指定不 push。
+Make viewer changes in Valet Viewer, bump its version, then run:
+
+```sh
+npm run sync -- ../alternative_online_bridge ../valet-review
+```
+
+Run this command from Valet Viewer. Validate all three projects and commit each repository. Pushes remain a separate, explicitly authorized step.
