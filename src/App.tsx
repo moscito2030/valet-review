@@ -11,6 +11,7 @@ import {
   Bookmark,
   Check,
   Diamond,
+  Trash2,
 } from 'lucide-react';
 import { DealExplorer } from './components/deal-explorer';
 import { Modal } from './components/modal';
@@ -27,9 +28,9 @@ import {
   MAX_FILE_BYTES,
 } from './lib/imports';
 import { decodeShare, encodeShare, singleBoard } from './lib/share';
+import { removeAndSaveBoard, storageKey } from './lib/remove-board';
 const suits = { S: '♠', H: '♥', D: '♦', C: '♣', NT: 'NT' };
 const signed = (n: number, decimals = 0) => `${n > 0 ? '+' : ''}${n.toFixed(decimals)}`;
-const storageKey = 'valet-review:v1';
 function contract(r: Result) {
   if (r.status === 'cancelled') return 'Cancelled';
   if (!r.level) return 'PASS';
@@ -51,7 +52,7 @@ export default function App() {
   const [selection, setSelection] = useState(0);
   const [comparison, setComparison] = useState<string[]>([]);
   const [metric, setMetric] = useState<'butler' | 'crossimp' | 'mp'>('butler');
-  const [modal, setModal] = useState<'import' | 'share' | 'help' | 'export' | null>(null);
+  const [modal, setModal] = useState<'import' | 'share' | 'help' | 'export' | 'remove' | null>(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -65,7 +66,7 @@ export default function App() {
   const [popupError, setPopupError] = useState('');
   function load(next: Dataset) {
     setData(next);
-    setBoardId(next.selectedBoardId || next.boards[0].id);
+    setBoardId(next.selectedBoardId || next.boards[0]?.id || '');
     setSelectedId(next.selectedResultId);
     setComparison([]);
     setSelection((s) => s + 1);
@@ -109,7 +110,7 @@ export default function App() {
   }, []);
   const board = data.boards.find((b) => b.id === boardId) ?? data.boards[0];
   const index = data.boards.indexOf(board);
-  const results = data.results.filter((r) => r.boardId === board.id);
+  const results = data.results.filter((r) => r.boardId === board?.id);
   const selected = results.find((r) => r.id === selectedId);
   const stats = compareResults(results);
   const pair = comparison
@@ -128,7 +129,7 @@ export default function App() {
     setPreview(undefined);
   }
   function snapshot() {
-    return validateDataset({ ...data, selectedBoardId: board.id, selectedResultId: selected?.id });
+    return validateDataset({ ...data, selectedBoardId: board?.id, selectedResultId: selected?.id });
   }
   async function readFile(file?: File) {
     if (!file) return;
@@ -160,6 +161,7 @@ export default function App() {
     }
   }
   async function makeLink() {
+    if (!board) return;
     setWorking(true);
     setPopupError('');
     try {
@@ -204,7 +206,7 @@ export default function App() {
               <Download size={16} />
               匯出
             </button>
-            <button className="share-button" onClick={() => open('share')}>
+            <button className="share-button" disabled={!board || loading} onClick={() => open('share')}>
               <Share2 size={16} />
               分享此副
             </button>
@@ -233,6 +235,12 @@ export default function App() {
         )}
         {loading ? (
           <p role="status">正在開啟分享牌局…</p>
+        ) : !board ? (
+          <section className="panel empty" aria-label="沒有牌局">
+            <h2>目前沒有牌局</h2>
+            <p className="muted">可以匯入新的牌型或檢討檔，開始下一份檢討。</p>
+            <button onClick={() => open('import')}><Upload size={16} />匯入牌局</button>
+          </section>
         ) : (
           <>
             <div className="board-bar">
@@ -271,7 +279,7 @@ export default function App() {
               <span className="board-counter">
                 {String(index + 1).padStart(2, '0')} / {String(data.boards.length).padStart(2, '0')}
               </span>
-              <button
+              <div className="review-actions"><button
                 onClick={() => {
                   try {
                     localStorage.setItem(storageKey, JSON.stringify(snapshot()));
@@ -284,6 +292,9 @@ export default function App() {
                 <Bookmark size={15} />
                 儲存檢討
               </button>
+              <button className="remove-board-button" onClick={() => open('remove')}>
+                <Trash2 size={15} />移除此牌
+              </button></div>
             </div>
             <div className="workspace">
               <section className="panel deal-panel" aria-label="牌局與試打">
@@ -506,12 +517,33 @@ export default function App() {
             {
               import: '匯入檢討資料',
               export: '匯出檢討資料',
-              share: `分享第 ${board.number} 副`,
+              share: `分享第 ${board?.number ?? ''} 副`,
+              remove: '移除此牌',
               help: '從比較到試打',
             }[modal]
           }
           close={() => setModal(null)}
         >
+          {modal === 'remove' && board && (
+            <>
+              <p>移除{board.group ? `「${board.group}」的` : ''}第 {board.number} 副牌及其 {results.length} 筆成績？</p>
+              <p className="muted">剩餘檢討會一併儲存至此瀏覽器，取代先前的本機儲存。移除後無法復原，需要保留時請先匯出。</p>
+              <div className="button-row">
+                <button onClick={() => setModal(null)}>保留此牌</button>
+                <button className="remove-board-button" onClick={() => {
+                  try {
+                    const next = removeAndSaveBoard(data, board.id, localStorage);
+                    load(next);
+                    history.replaceState(null, '', location.pathname + location.search);
+                    setModal(null);
+                    setNotice(next.boards.length ? '已移除此牌，剩餘檢討已儲存。' : '已移除最後一副牌，本機檢討已清空。');
+                  } catch {
+                    setPopupError('無法更新本機儲存，此牌尚未移除。請確認瀏覽器允許儲存後再試。');
+                  }
+                }}><Trash2 size={15} />確認移除</button>
+              </div>
+            </>
+          )}
           {modal === 'import' && (
             <>
               <p className="muted">
@@ -644,7 +676,7 @@ export default function App() {
                 <button onClick={() => download('boards.pbn', exportPbn(data.boards))}>
                   全部牌型 PBN
                 </button>
-                <button onClick={() => download(`board-${board.number}.pbn`, exportPbn([board]))}>
+                <button disabled={!board} onClick={() => board && download(`board-${board.number}.pbn`, exportPbn([board]))}>
                   目前單副 PBN
                 </button>
                 <button

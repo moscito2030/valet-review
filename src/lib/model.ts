@@ -55,7 +55,7 @@ export const datasetSchema = z
   .object({
     version: z.literal(1),
     title: z.string().trim().min(1).max(160),
-    boards: z.array(boardSchema).min(1).max(256),
+    boards: z.array(boardSchema).max(256),
     results: z.array(resultSchema).max(10000),
     selectedBoardId: z.string().max(120).optional(),
     selectedResultId: z.string().max(120).optional(),

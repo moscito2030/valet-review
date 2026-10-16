@@ -232,6 +232,9 @@ main {
   font-size: 11px;
   letter-spacing: 0.12em;
 }
+.review-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.remove-board-button { color: #963f43; border-color: #e7c9c7; background: #faf0ef; }
+.remove-board-button:hover { color: #813237; border-color: #b96668; background: #f4e0de; }
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
@@ -660,7 +663,8 @@ textarea {
     max-width: 140px;
     font-size: 13px;
   }
-  .board-bar > button {
+  .board-bar > button,
+  .review-actions > button {
     font-size: 11px;
     padding: 9px;
   }
