@@ -33,12 +33,12 @@ export const resultSchema = z
     nsScore: z.number().int().min(-20000).max(20000),
     playerNames: z
       .object({
-        N: shortText.optional(),
-        E: shortText.optional(),
-        S: shortText.optional(),
-        W: shortText.optional(),
+        N: shortText.default(''),
+        E: shortText.default(''),
+        S: shortText.default(''),
+        W: shortText.default(''),
       })
-      .default({}),
+      .default({ N: '', E: '', S: '', W: '' }),
     updatedAt: z.string().max(60).default(''),
     miniBridge: z.boolean().optional(),
   })

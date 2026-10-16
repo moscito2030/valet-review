@@ -36,7 +36,7 @@ export function demoDataset() {
         nsScore: 0,
         status: i === 4 ? 'cancelled' : 'played',
         updatedAt: '',
-        playerNames: { N: '北家牌友', E: '東家牌友', S: '南家牌友', W: '西家牌友' },
+        playerNames: { N: '', E: '', S: '', W: '' },
       };
       r.nsScore = r.status === 'cancelled' ? 0 : contractScore(r, board.vulnerability);
       return r;

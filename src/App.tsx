@@ -341,20 +341,9 @@ export default function App() {
                 <div className="metric-picker" role="group" aria-label="比較方式">
                   {(['butler', 'crossimp', 'mp'] as const).map((m) => (
                     <button key={m} aria-pressed={metric === m} onClick={() => setMetric(m)}>
-                      {{ butler: 'Butler IMP', crossimp: 'Cross IMP', mp: 'MP' }[m]}
+                      {m === 'mp' ? <><span className="metric-full">Matchpoints</span><span className="metric-short">MP</span></> : m === 'butler' ? 'Butler IMP' : 'Cross IMP'}
                     </button>
                   ))}
-                </div>
-                <div className="datum-strip">
-                  <span>NS 基準分</span>
-                  <strong>{stats.datum === null ? '—' : signed(stats.datum)}</strong>
-                  <button
-                    className="icon-button"
-                    aria-label="計分說明"
-                    onClick={() => open('help')}
-                  >
-                    <Info size={15} />
-                  </button>
                 </div>
                 {!results.length ? (
                   <div className="empty">
@@ -427,15 +416,6 @@ export default function App() {
                                   >
                                     {contract(r)}
                                   </strong>
-                                  {Object.values(r.playerNames).some(Boolean) && (
-                                    <small
-                                      title={`NS ${r.playerNames.N || '—'} / ${r.playerNames.S || '—'} · EW ${r.playerNames.E || '—'} / ${r.playerNames.W || '—'}`}
-                                    >
-                                      NS {r.playerNames.N || '—'} / {r.playerNames.S || '—'}
-                                      <br />
-                                      EW {r.playerNames.E || '—'} / {r.playerNames.W || '—'}
-                                    </small>
-                                  )}
                                   {r.lead && (
                                     <small>
                                       首攻 {suits[r.lead[0] as keyof typeof suits]}
@@ -772,7 +752,7 @@ export default function App() {
                 選擇牌號，再點一桌成績載入合約。點手牌或下方卡牌出牌，系統會限制輪流與跟花。可以回上一步，或點本墩的牌退回該步。
               </p>
               <p>
-                鍵盤可按牌面點數（2–9、T、J、Q、K、A）：只有一張合法牌符合時才會出牌。Backspace
+                鍵盤可按牌面點數（2–9、T、J、Q、K、A）；同點數有多張時，先按花色 S／H／D／C，再按點數，例如 HT。Esc 清除花色選擇。Backspace
                 回上一步。點方位切換單家視角，首攻後顯示夢家。
               </p>
               <h3>同副比較</h3>

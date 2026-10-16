@@ -127,7 +127,7 @@ test('share roundtrip preserves selected result and strips identifying fields by
   assert.deepEqual(decoded, JSON.parse(JSON.stringify(shared)));
   assert.equal(decoded.boards.length, 1);
   assert.equal(decoded.selectedResultId, 'result-1');
-  assert.deepEqual(decoded.results[0].playerNames, {});
+  assert.deepEqual(decoded.results[0].playerNames, { N: '', E: '', S: '', W: '' });
   assert.ok(!JSON.stringify(decoded).includes('週末'));
   assert.equal(singleBoard(data, data.boards[0].id, undefined, false, 'none').results.length, 0);
   assert.equal(

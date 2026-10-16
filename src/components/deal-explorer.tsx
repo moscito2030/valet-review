@@ -1,3 +1,4 @@
+import { cardKey } from '../lib/play-keyboard';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Undo2, X } from 'lucide-react';
 import type { Board, Result, Seat } from '../lib/model';
@@ -252,6 +253,8 @@ export function DealExplorer({
   const lott = analysis ? lawOfTotalTricks(board, analysis.tricks) : null;
   const turn = state ? nextSeat(state) : undefined;
   const finished = state ? state.ns + state.ew === 13 : false;
+  const pendingSuit = useRef('');
+  useEffect(() => { pendingSuit.current = ''; }, [state, board, selection]);
   const playable = new Set(state ? legalCards(state) : []);
   function playFromHand(seat: Seat | undefined, card: string) {
     if (!state || seat !== turn || finished || !playable.has(card)) return;
@@ -268,16 +271,18 @@ export function DealExplorer({
         event.altKey
       )
         return;
+      if (event.repeat || !state || finished) return;
       const key = event.key.toUpperCase();
       if (key === 'BACKSPACE' && history.length > 1) {
         event.preventDefault();
         setHistory(history.slice(0, -1));
+        pendingSuit.current = '';
+        return;
       }
-      const matches = [...playable].filter((card) => card[1] === key);
-      if (matches.length === 1) {
-        event.preventDefault();
-        playFromHand(turn, matches[0]);
-      }
+      const input = cardKey(key, pendingSuit.current, playable);
+      pendingSuit.current = input.suit;
+      if (input.suit || input.card) event.preventDefault();
+      if (input.card) playFromHand(turn, input.card);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -453,7 +458,7 @@ export function DealExplorer({
               >
                 <b>{seat}</b>
                 <span className="hand-player-name" title={playerNames[seat]}>
-                  {playerNames[seat] || `${seatNames[seat]}家`}
+                  {playerNames[seat] ?? ''}
                 </span>
               </button>
             </header>
@@ -599,7 +604,7 @@ export function DealExplorer({
         <div className="play-keyboard">
           <div className="play-keyboard-heading">
             <strong>
-              {finished ? '已打完' : `${turn} ${playerNames[turn!] || seatNames[turn!]} 出牌`}
+              {finished ? '已打完' : `${turn} ${playerNames[turn!] ?? ''} 出牌`}
             </strong>
             <button
               type="button"

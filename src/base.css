@@ -298,22 +298,6 @@ main {
   border-bottom-color: var(--accent);
   font-weight: 600;
 }
-.datum-strip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 24px 14px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.datum-strip strong {
-  color: #385943;
-  font-size: 17px;
-  font-variant-numeric: tabular-nums;
-}
-.datum-strip button {
-  margin-left: auto;
-}
 .table-scroll {
   overflow-x: auto;
 }
@@ -681,4 +665,11 @@ textarea {
   footer > span > span {
     display: none;
   }
+}
+
+.traveller { container-type: inline-size; }
+.metric-short { display: none; }
+@container (max-width: 340px) {
+  .metric-full { display: none; }
+  .metric-short { display: inline; }
 }
