@@ -178,9 +178,8 @@ export default function App() {
       <header className="site-header">
         <a className="brand" href={location.pathname}>
           <Diamond size={28} fill="currentColor" />
-          <span>
-            VALET <em>Review</em>
-          </span>
+          <span className="brand-wordmark">VALET</span>
+          <span className="brand-subtitle">REVIEW</span>
         </a>
         <span className="header-note">每一副牌，都有值得再看一次的地方。</span>
         <button className="icon-button" aria-label="使用說明" onClick={() => open('help')}>
