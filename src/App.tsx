@@ -181,7 +181,7 @@ export default function App() {
           <span className="brand-wordmark">VALET</span>
           <span className="brand-subtitle">REVIEW</span>
         </a>
-        <span className="header-note">每一副牌，都有值得再看一次的地方。</span>
+        <span className="header-note">造輪子？或許你會發現我的小巧思。</span>
         <button className="icon-button" aria-label="使用說明" onClick={() => open('help')}>
           <Info size={20} />
         </button>
