@@ -109,3 +109,7 @@ npm run build
 ```
 
 目前不處理叫牌／出牌紀錄的完整重播、不平衡合約的雙邊判罰與帳號雲端同步。從 Valet 匯入請使用完整牌型 PBN 與一般成績 CSV；含 splitNS／splitEW 的不平衡合約會明確拒絕，避免當成普通成績誤算。
+
+## 共用牌局檢視器
+
+牌桌、試打、鍵盤輸入、分析 worker 與樣式使用 `@valet/deal-viewer`，由 Valet 的 `packages/deal-viewer/` 集中維護。本倉庫攜帶 `vendor/` 的固定版本套件，可獨立安裝、建置及部署。不要在本專案複製修改檢視器實作；於 Valet 升版後執行 `npm run viewer:sync -- ../valet-review` 更新本專案，再測試並提交套件與鎖定檔。
