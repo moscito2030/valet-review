@@ -45,9 +45,15 @@ export function contractScore(
   return score * (ns ? 1 : -1);
 }
 
-export function compareResults(results: Result[]) {
+export function directionalResult(r: Result, side: 'ns' | 'ew') {
+  return r.split && r.status !== 'cancelled' ? { ...r, ...r.split[side] } : r;
+}
+export function sideScore(r: Result, side: 'ns' | 'ew') {
+  return directionalResult(r, side).nsScore * (side === 'ns' ? 1 : -1);
+}
+export function compareResults(results: Result[], side: 'ns' | 'ew' = 'ns') {
   const valid = results.filter((r) => r.status !== 'cancelled');
-  const mean = valid.length ? valid.reduce((s, r) => s + r.nsScore, 0) / valid.length : null;
+  const mean = valid.length ? valid.reduce((s, r) => s + sideScore(r, side), 0) / valid.length : null;
   const datum = mean === null ? null : Math.sign(mean) * Math.round(Math.abs(mean) / 10) * 10;
   return {
     mean,
@@ -58,13 +64,13 @@ export function compareResults(results: Result[]) {
       if (r.status === 'cancelled' || !others.length)
         return { id: r.id, butler: null, crossimp: null, mp: null, top: null, percent: null };
       const mp = others.reduce(
-        (sum, x) => sum + (r.nsScore > x.nsScore ? 2 : r.nsScore === x.nsScore ? 1 : 0),
+        (sum, x) => sum + (sideScore(r, side) > sideScore(x, side) ? 2 : sideScore(r, side) === sideScore(x, side) ? 1 : 0),
         0,
       );
       return {
         id: r.id,
-        butler: imps(r.nsScore - datum!),
-        crossimp: others.reduce((s, x) => s + imps(r.nsScore - x.nsScore), 0) / others.length,
+        butler: imps(sideScore(r, side) - datum!),
+        crossimp: others.reduce((s, x) => s + imps(sideScore(r, side) - sideScore(x, side)), 0) / others.length,
         mp,
         top: others.length * 2,
         percent: (mp / (others.length * 2)) * 100,

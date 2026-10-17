@@ -16,6 +16,12 @@ export const boardSchema = z
   })
   .refine((b) => new Set(Object.values(b.deal).flat()).size === 52, '每副牌必須有 52 張不同的牌');
 export type Board = z.infer<typeof boardSchema>;
+const awardSchema = z.object({
+  level: z.number().int().min(0).max(7), strain: z.enum(['C','D','H','S','NT']),
+  doubled: z.union([z.literal(1),z.literal(2),z.literal(4)]), declarer: z.enum(seats),
+  tricks: z.number().int().min(0).max(13), lead: z.union([card,z.literal('')]).default(''),
+  nsScore: z.number().int().min(-20000).max(20000), miniBridge: z.boolean().optional(),
+}).refine(r => r.level !== 0 || (r.tricks === 0 && r.doubled === 1), 'Pass 必須是 0 墩、未加倍');
 export const resultSchema = z
   .object({
     id: z.string().min(1).max(120),
@@ -40,6 +46,7 @@ export const resultSchema = z
       })
       .default({ N: '', E: '', S: '', W: '' }),
     updatedAt: z.string().max(60).default(''),
+    split: z.object({ ns: awardSchema, ew: awardSchema }).optional(),
     miniBridge: z.boolean().optional(),
   })
   .refine(

@@ -17,7 +17,7 @@ import { DealExplorer } from './components/deal-explorer';
 import { Modal } from './components/modal';
 import { type Dataset, type Result, validateDataset } from './lib/model';
 import { demoDataset } from './lib/demo';
-import { compareResults, imps } from './lib/scoring';
+import { compareResults, imps, directionalResult, sideScore } from './lib/scoring';
 import {
   csvHeader,
   exportPbn,
@@ -48,6 +48,7 @@ function download(name: string, content: string, type = 'text/plain') {
 export default function App() {
   const [data, setData] = useState<Dataset>(demoDataset);
   const [boardId, setBoardId] = useState('demo:1');
+  const [side, setSide] = useState<'ns' | 'ew'>('ns');
   const [selectedId, setSelectedId] = useState<string>();
   const [selection, setSelection] = useState(0);
   const [comparison, setComparison] = useState<string[]>([]);
@@ -112,7 +113,10 @@ export default function App() {
   const index = data.boards.indexOf(board);
   const results = data.results.filter((r) => r.boardId === board?.id);
   const selected = results.find((r) => r.id === selectedId);
-  const stats = compareResults(results);
+  const stats = compareResults(results, side);
+  const nsStats = compareResults(results, 'ns');
+  const ewStats = compareResults(results, 'ew');
+  const hasSplit = results.some(r => r.status !== 'cancelled' && !!r.split);
   const pair = comparison
     .map((id) => results.find((r) => r.id === id))
     .filter((r): r is Result => !!r);
@@ -318,12 +322,14 @@ export default function App() {
                 <DealExplorer
                   key={board.id}
                   board={board}
-                  result={selected}
+                  result={selected ? directionalResult(selected, side) : undefined}
                   resultSelection={selection}
                   tableSelected={!!selected}
                   playerNames={selected?.playerNames}
                   onManualTrial={() => setSelectedId(undefined)}
                   averageScore={stats.datum}
+                  scoreSide={side.toUpperCase()}
+                  datumDetails={{ ns: nsStats.mean, ew: ewStats.mean, split: hasSplit }}
                   validResults={stats.valid}
                 />
                 <p className="panel-tip">
@@ -337,6 +343,9 @@ export default function App() {
                     <h2>同副跨桌比較</h2>
                   </div>
                   <span className="count-badge">{stats.valid} 桌有效</span>
+                </div>
+                <div className="metric-picker" role="group" aria-label="比較方向">
+                  {(['ns','ew'] as const).map(s => <button key={s} aria-pressed={side === s} onClick={() => { setSide(s); setSelection(n => n + 1); }}>{s.toUpperCase()}</button>)}
                 </div>
                 <div className="metric-picker" role="group" aria-label="比較方式">
                   {(['butler', 'crossimp', 'mp'] as const).map((m) => (
@@ -367,12 +376,13 @@ export default function App() {
                         <tr>
                           <th>比較</th>
                           <th>桌次／合約</th>
-                          <th>NS 原始分</th>
+                          <th>{side.toUpperCase()} 得分</th>
                           <th>{metric === 'mp' ? 'MP %' : 'IMP'}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {results.map((r) => {
+                          const awarded = directionalResult(r, side);
                           const score = stats.rows.find((row) => row.id === r.id)!;
                           const value = metric === 'mp' ? score.percent : score[metric];
                           return (
@@ -401,7 +411,7 @@ export default function App() {
                               <td>
                                 <button
                                   className="result-select"
-                                  aria-label={`查看 ${r.table} ${contract(r)}`}
+                                  aria-label={`查看 ${r.table} ${contract(awarded)}`}
                                   aria-pressed={selected?.id === r.id}
                                   onClick={() => {
                                     setSelectedId(r.id);
@@ -411,21 +421,21 @@ export default function App() {
                                   <span className="table-name">{r.table}</span>
                                   <strong
                                     className={
-                                      r.strain === 'H' || r.strain === 'D' ? 'red-suit' : ''
+                                      awarded.strain === 'H' || awarded.strain === 'D' ? 'red-suit' : ''
                                     }
                                   >
-                                    {contract(r)}
+                                    {contract(awarded)}
                                   </strong>
-                                  {r.lead && (
+                                  {awarded.lead && (
                                     <small>
-                                      首攻 {suits[r.lead[0] as keyof typeof suits]}
-                                      {r.lead[1]}
+                                      首攻 {suits[awarded.lead[0] as keyof typeof suits]}
+                                      {awarded.lead[1]}
                                     </small>
                                   )}
                                 </button>
                               </td>
                               <td className="numeric">
-                                {r.status === 'cancelled' ? '—' : signed(r.nsScore)}
+                                {r.status === 'cancelled' ? '—' : signed(sideScore(r, side))}
                               </td>
                               <td
                                 className={`numeric ${value !== null && value < 0 ? 'negative' : ''}`}
@@ -462,9 +472,9 @@ export default function App() {
                         </button>
                       </p>
                       <div className="comparison-value">
-                        <strong>{signed(imps(pair[0].nsScore - pair[1].nsScore))}</strong>
+                        <strong>{signed(imps(sideScore(pair[0], side) - sideScore(pair[1], side)))}</strong>
                         <span>IMP</span>
-                        <small>NS 原始分差 {signed(pair[0].nsScore - pair[1].nsScore)}</small>
+                        <small>{side.toUpperCase()} 得分差 {signed(sideScore(pair[0], side) - sideScore(pair[1], side))}</small>
                       </div>
                     </>
                   ) : (
@@ -757,7 +767,7 @@ export default function App() {
               </p>
               <h3>同副比較</h3>
               <p>
-                全部指標以 NS 方向計算。Butler 以有效桌次平均原始分四捨五入至 10
+                全部指標依所選 NS／EW 方向計算，不平衡得分採該方向獲判結果。Butler 以該方向有效桌次平均分四捨五入至 10
                 分為基準（含該桌、不去頭尾）。Cross IMP 是與其他有效桌次逐一換算 IMP 的平均。
               </p>
               <p>

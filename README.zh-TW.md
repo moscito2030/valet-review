@@ -64,14 +64,14 @@ PBN 支援完整 Deal、Board、Dealer、Vulnerable、BridgeboardGroup，以及�
 
 ## 比較公式
 
-全部數值以 NS 為方向，Cancelled 排除。少於兩筆有效成績時不顯示比較分。
+可切換 NS／EW，以該方向的獲判得分比較。不平衡得分仍只算一桌，兩方向各有自己的 Datum；Cancelled 排除。少於兩筆有效成績時不顯示比較分。
 
 | 項目 | 計算方式 |
 | --- | --- |
 | Butler IMP | 全部有效桌次平均原始分，四捨五入至 10 分，作為 Datum；各桌與 Datum 的差轉為 IMP。含本桌、不去頭尾。 |
 | Cross IMP | 與其他每一桌逐一轉為 IMP，再取平均。 |
 | MP | 勝一桌 2 分、平手 1 分；百分比除以可得最高分。 |
-| 兩桌對照 | 第一桌 NS 原始分減第二桌 NS 原始分，再換算 IMP。 |
+| 兩桌對照 | 依所選方向，第一桌獲判分減第二桌獲判分，再換算 IMP。 |
 
 ## 試打與分析
 
@@ -110,7 +110,7 @@ npm run typecheck
 npm run build
 ```
 
-目前不處理叫牌／出牌紀錄的完整重播、不平衡合約的雙邊判罰與帳號雲端同步。從 Valet 匯入請使用完整牌型 PBN 與一般成績 CSV；含 splitNS／splitEW 的不平衡合約會明確拒絕，避免當成普通成績誤算。
+目前不處理叫牌／出牌紀錄的完整重播與帳號雲端同步。Valet 輸出、檢討 JSON、分享連結與 CSV 皆可保留不平衡得分。CSV 可使用含 ns／ew 合約的 split JSON 欄，或 Valet 的 splitNS／splitEW 雙欄；合約內 nsScore 皆以 NS 方向儲存。檢視器顯示取整至十位的 Datum，有不平衡得分時加上星號，點擊可查看 NS／EW 未取整至十位的平均分。
 
 ## 共用牌局檢視器
 

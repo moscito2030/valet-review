@@ -142,8 +142,10 @@ export function importPbn(text: string): Dataset {
 export function importResultsCsv(text: string, dataset: Dataset): Dataset {
   checkText(text);
   const results = parseCsv(text).map((row, i) => {
-    if (row.splitNS || row.splitEW)
-      throw new Error(`第 ${i + 2} 列是不平衡合約，目前需先整理成各桌獨立檢討結果`);
+    if (!!row.splitNS !== !!row.splitEW)
+      throw new Error(`第 ${i + 2} 列需同時提供 splitNS 與 splitEW`);
+    if (row.split && (row.splitNS || row.splitEW))
+      throw new Error(`第 ${i + 2} 列請勿混用兩種不平衡得分格式`);
     const candidates = dataset.boards.filter((b) =>
       row.boardId
         ? b.id === row.boardId
@@ -176,6 +178,7 @@ export function importResultsCsv(text: string, dataset: Dataset): Dataset {
       tricks: emptyCancelled ? 0 : Number(row.tricks),
       lead: (row.lead || '').toUpperCase().replace('10', 'T'),
       nsScore: row.nsScore ? Number(row.nsScore) : 0,
+      split: row.split ? JSON.parse(row.split) : row.splitNS ? { ns: JSON.parse(row.splitNS), ew: JSON.parse(row.splitEW) } : undefined,
       playerNames: Object.fromEntries(seats.map((s) => [s, row[s] || ''])),
     };
     const parsed = resultSchema.safeParse(raw);
@@ -201,7 +204,7 @@ export function exportPbn(boards: Board[]) {
     .join('\n\n');
 }
 export const csvHeader =
-  'id,boardId,board,table,assignmentId,level,strain,doubled,declarer,tricks,lead,status,nsScore,N,E,S,W';
+  'id,boardId,board,table,assignmentId,level,strain,doubled,declarer,tricks,lead,status,nsScore,N,E,S,W,split';
 export function exportResultsCsv(results: Result[]) {
   const cell = (v: string | number) => `"${String(v).replaceAll('"', '""')}"`;
   return (
@@ -224,6 +227,7 @@ export function exportResultsCsv(results: Result[]) {
           r.status,
           r.nsScore,
           ...seats.map((s) => r.playerNames[s] || ''),
+          r.split ? JSON.stringify(r.split) : '',
         ]
           .map(cell)
           .join(','),

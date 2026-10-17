@@ -68,14 +68,14 @@ PBN supports complete Deal, Board, Dealer, Vulnerable and BridgeboardGroup tags,
 
 ## Comparison formulas
 
-All values use the NS perspective and exclude cancelled results. Comparison scores are not shown when fewer than two valid results are available.
+Choose NS or EW to compare the awarded scores in that direction. Split adjustments remain one table; each direction has its own datum. Cancelled results are excluded. Comparison scores are not shown when fewer than two valid results are available.
 
 | Metric | Calculation |
 | --- | --- |
 | Butler IMP | Average all valid raw scores and round to the nearest 10 for the datum; convert each table's difference from that datum to IMPs. Includes the table itself; no trimming. |
 | Cross IMP | Convert the difference against each other table to IMPs, then average. |
 | Matchpoints | Two points for each lower score, one for a tie; divide by the maximum available points for the percentage. |
-| Head-to-head | Subtract the second table's NS raw score from the first, then convert to IMPs. |
+| Head-to-head | Subtract the second table's score in the selected direction from the first, then convert to IMPs. |
 
 ## Trial play and analysis
 
@@ -118,7 +118,7 @@ npm run typecheck
 npm run build
 ```
 
-Full auction/play-record replay, split-contract adjustments and account-based cloud sync are not currently supported. To import from Valet, use complete-deal PBN and ordinary results CSV. Rows containing splitNS/splitEW adjustments are explicitly rejected rather than treated as ordinary results.
+Full auction/play-record replay and account-based cloud sync are not currently supported. Valet exports include both sides of split-contract adjustments. Review JSON, share links and CSV preserve these awards. CSV accepts a `split` JSON object with `ns` and `ew` contracts, or Valet’s paired `splitNS` / `splitEW` columns. Each contract stores `nsScore` in NS coordinates. The viewer shows a rounded datum with an asterisk for split awards; click it for the unrounded NS and EW means.
 
 ## Shared deal viewer
 
