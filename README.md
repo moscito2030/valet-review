@@ -136,4 +136,6 @@ The footer shows the deployed commit (first seven characters), linking to GitHub
 
 On opening Review, a dismissible notice identifies the source: shared URL, browser storage, or demo boards. URL data takes precedence over storage. Missing storage or failed loading falls back to demo boards, with a failure notice where applicable.
 
-Save to browser appends to existing storage and displays the merged collection. Matching board identities and deals are deduplicated; matching result IDs are updated. ID collisions with different deals are stored separately. Validation or storage failures preserve the prior saved data.
+Save to browser appends to existing storage and displays the merged collection. Matching origin keys are deduplicated; matching result origin keys are updated. Different origins are stored separately. Validation or storage failures preserve the prior saved data.
+
+Source identity: opaque originKey values identify boards and results independently of display IDs. Valet hashes stage ID and internal board number with SHA-256; result keys also include assignment identity. Independent imports and legacy data receive UUIDs on opening. JSON, browser storage and anonymous shares preserve these keys; PBN preserves board identity using ValetOrigin. Reimporting legacy files without identity creates a new source. Append matches origin keys and rejects conflicting deals without overwriting storage.

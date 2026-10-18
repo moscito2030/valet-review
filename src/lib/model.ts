@@ -8,6 +8,7 @@ const hand = z.array(card).length(13);
 export const boardSchema = z
   .object({
     id: z.string().min(1).max(120),
+    originKey: z.string().regex(/^(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i).optional(),
     number: z.number().int().min(1).max(9999),
     group: shortText.optional(),
     dealer: z.enum(seats),
@@ -25,6 +26,7 @@ const awardSchema = z.object({
 export const resultSchema = z
   .object({
     id: z.string().min(1).max(120),
+    originKey: z.string().regex(/^(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i).optional(),
     boardId: z.string().min(1).max(120),
     table: shortText,
     assignmentId: z.string().max(120).default(''),
@@ -68,6 +70,10 @@ export const datasetSchema = z
     selectedResultId: z.string().max(120).optional(),
   })
   .superRefine((data, ctx) => {
+    const origins = data.boards.flatMap(b => b.originKey ? [b.originKey] : []);
+    const resultOrigins = data.results.flatMap(r => r.originKey ? [`${r.boardId}:${r.originKey}`] : []);
+    if (new Set(origins).size !== origins.length || new Set(resultOrigins).size !== resultOrigins.length)
+      ctx.addIssue({ code: 'custom', message: '來源識別碼重複' });
     const ids = new Set(data.boards.map((b) => b.id));
     if (
       ids.size !== data.boards.length ||

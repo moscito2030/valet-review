@@ -81,7 +81,7 @@ export function importPbn(text: string): Dataset {
     );
     const number = Number(tags.board),
       group = tags.bridgeboardgroup || undefined;
-    const id = `${group ?? 'board'}:${number}`;
+    const id = tags.valetorigin ?? `${group ?? 'board'}:${number}`;
     const vul = {
       LOVE: 'None',
       NONE: 'None',
@@ -93,6 +93,7 @@ export function importPbn(text: string): Dataset {
     }[tags.vulnerable?.toUpperCase()];
     const parsed = boardSchema.safeParse({
       id,
+      originKey: tags.valetorigin,
       number,
       group,
       dealer: tags.dealer?.toUpperCase() ?? seats[(number - 1) % 4],
@@ -193,13 +194,15 @@ export function importResultsCsv(text: string, dataset: Dataset): Dataset {
     return result;
   });
   // CSV replaces this collection's result list atomically. No hidden merge or duplicate scoring.
-  return validateDataset({ ...dataset, results, selectedResultId: undefined });
+  return validateDataset({ ...dataset, results: results.map(r => ({ ...r,
+    originKey: dataset.results.find(old => old.id === r.id && old.boardId === r.boardId)?.originKey,
+  })), selectedResultId: undefined });
 }
 export function exportPbn(boards: Board[]) {
   return boards
     .map(
       (b) =>
-        `[Board "${b.number}"]\n${b.group ? `[BridgeboardGroup "${b.group.replace(/["\\\r\n]/g, '')}"]\n` : ''}[Dealer "${b.dealer}"]\n[Vulnerable "${b.vulnerability}"]\n[Deal "${toPbn(b.deal)}"]`,
+        `[Board "${b.number}"]\n${b.originKey ? `[ValetOrigin "${b.originKey}"]\n` : ''}${b.group ? `[BridgeboardGroup "${b.group.replace(/["\\\r\n]/g, '')}"]\n` : ''}[Dealer "${b.dealer}"]\n[Vulnerable "${b.vulnerability}"]\n[Deal "${toPbn(b.deal)}"]`,
     )
     .join('\n\n');
 }

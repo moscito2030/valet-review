@@ -1,3 +1,4 @@
+import { withIdentity } from './lib/identity';
 import { appendToBrowser } from './lib/browser-storage';
 import { AppVersion } from './components/app-version';
 import { useEffect, useState } from 'react';
@@ -48,7 +49,7 @@ function download(name: string, content: string, type = 'text/plain') {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export default function App() {
-  const [data, setData] = useState<Dataset>(demoDataset);
+  const [data, setData] = useState<Dataset>(() => withIdentity(demoDataset()));
   const [boardId, setBoardId] = useState('demo:1');
   const [side, setSide] = useState<'ns' | 'ew'>('ns');
   const [selectedId, setSelectedId] = useState<string>();
@@ -68,6 +69,7 @@ export default function App() {
   const [working, setWorking] = useState(false);
   const [popupError, setPopupError] = useState('');
   function load(next: Dataset) {
+    next = withIdentity(next);
     setData(next);
     setBoardId(next.selectedBoardId || next.boards[0]?.id || '');
     setSelectedId(next.selectedResultId);
@@ -100,7 +102,9 @@ export default function App() {
         try {
           const saved = localStorage.getItem(storageKey);
           if (saved) {
-            load(importJson(saved));
+            const restored = withIdentity(importJson(saved));
+            localStorage.setItem(storageKey, JSON.stringify(restored));
+            load(restored);
             setNotice('牌局來源：本機儲存。已載入此瀏覽器上次儲存的檢討。');
           } else {
             load(demoDataset());

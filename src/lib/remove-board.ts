@@ -23,11 +23,11 @@ export function removeAndSaveBoard(data: Dataset, boardId: string, storage: Pick
     const raw = storage.getItem(storageKey);
     const saved = raw ? validateDataset(JSON.parse(raw)) : undefined;
     const target = data.boards.find(b => b.id === boardId)!;
-    const stored = saved?.boards.find(b => b.id === boardId);
+    const stored = saved?.boards.find(b => target.originKey ? b.originKey === target.originKey : b.id === boardId);
     // Removing a board from an imported/shared view must not replace the saved library.
     if (saved) {
-      persisted = stored && JSON.stringify(stored) === JSON.stringify(target)
-        ? removeBoard(saved, boardId) : saved;
+      persisted = stored && (target.originKey || JSON.stringify(stored) === JSON.stringify(target))
+        ? removeBoard(saved, stored.id) : saved;
     }
   }
   storage.setItem(storageKey, JSON.stringify(persisted));
