@@ -494,7 +494,7 @@ export default function App() {
         )}
         <footer>
           <span>
-            <AppVersion /> <span className="muted">／ 從結果，回到每一次選擇。</span>
+            <AppVersion /> <span className="muted">／ 由臺灣大學橋藝社自主研發</span>
           </span>
           <button
             className="text-button"
