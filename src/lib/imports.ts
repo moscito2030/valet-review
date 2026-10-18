@@ -10,9 +10,11 @@ import {
   type Vulnerability,
 } from './model';
 import { parseCsv } from './csv';
+import { csvCell } from './csv-cell';
 import { contractScore } from './scoring';
 import { toPbn } from './play';
 export const MAX_FILE_BYTES = 2_000_000;
+export const MAX_JSON_FILE_BYTES = 32_000_000;
 const vulnerabilities: Vulnerability[] = [
   'None',
   'NS',
@@ -31,12 +33,12 @@ const vulnerabilities: Vulnerability[] = [
   'NS',
   'EW',
 ];
-export function checkText(text: string) {
-  if (new TextEncoder().encode(text).length > MAX_FILE_BYTES) throw new Error('檔案超過 2 MB 上限');
+export function checkText(text: string, limit = MAX_FILE_BYTES) {
+  if (new TextEncoder().encode(text).length > limit) throw new Error(`檔案超過 ${limit / 1_000_000} MB 上限`);
   if (!text.trim()) throw new Error('請選擇檔案或貼上內容');
 }
 export function importJson(text: string): Dataset {
-  checkText(text);
+  checkText(text, MAX_JSON_FILE_BYTES);
   try {
     return validateDataset(JSON.parse(text));
   } catch (error) {
@@ -81,7 +83,7 @@ export function importPbn(text: string): Dataset {
     );
     const number = Number(tags.board),
       group = tags.bridgeboardgroup || undefined;
-    const id = tags.valetorigin ?? `${group ?? 'board'}:${number}`;
+    const id = tags.valetboardid ?? tags.valetorigin ?? `${group ?? 'board'}:${number}`;
     const vul = {
       LOVE: 'None',
       NONE: 'None',
@@ -165,9 +167,13 @@ export function importResultsCsv(text: string, dataset: Dataset): Dataset {
       ['level', 'strain', 'doubled', 'declarer', 'tricks'].some((k) => !row[k])
     )
       throw new Error(`第 ${i + 2} 列合約欄位不完整`);
+    if (row.miniBridge && !/^(true|false)$/i.test(row.miniBridge)) throw new Error(`第 ${i + 2} 列 miniBridge 需為 true 或 false`);
     const raw = {
       id: row.id || `${board.id}/${row.assignmentId || row.table || i + 1}`,
       boardId: board.id,
+      originKey: row.originKey || undefined,
+      updatedAt: row.updatedAt || '',
+      miniBridge: row.miniBridge ? row.miniBridge.toLowerCase() === 'true' : undefined,
       board: board.number,
       table: row.table || row.assignmentId || `桌 ${i + 1}`,
       assignmentId: row.assignmentId || row.table || String(i + 1),
@@ -195,21 +201,20 @@ export function importResultsCsv(text: string, dataset: Dataset): Dataset {
   });
   // CSV replaces this collection's result list atomically. No hidden merge or duplicate scoring.
   return validateDataset({ ...dataset, results: results.map(r => ({ ...r,
-    originKey: dataset.results.find(old => old.id === r.id && old.boardId === r.boardId)?.originKey,
+    originKey: r.originKey ?? dataset.results.find(old => old.id === r.id && old.boardId === r.boardId)?.originKey,
   })), selectedResultId: undefined });
 }
 export function exportPbn(boards: Board[]) {
   return boards
     .map(
       (b) =>
-        `[Board "${b.number}"]\n${b.originKey ? `[ValetOrigin "${b.originKey}"]\n` : ''}${b.group ? `[BridgeboardGroup "${b.group.replace(/["\\\r\n]/g, '')}"]\n` : ''}[Dealer "${b.dealer}"]\n[Vulnerable "${b.vulnerability}"]\n[Deal "${toPbn(b.deal)}"]`,
+        `[Board "${b.number}"]\n[ValetBoardId "${b.id.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replace(/[\r\n]/g, '')}"]\n${b.originKey ? `[ValetOrigin "${b.originKey}"]\n` : ''}${b.group ? `[BridgeboardGroup "${b.group.replace(/["\\\r\n]/g, '')}"]\n` : ''}[Dealer "${b.dealer}"]\n[Vulnerable "${b.vulnerability}"]\n[Deal "${toPbn(b.deal)}"]`,
     )
     .join('\n\n');
 }
 export const csvHeader =
-  'id,boardId,board,table,assignmentId,level,strain,doubled,declarer,tricks,lead,status,nsScore,N,E,S,W,split';
+  'id,boardId,board,table,assignmentId,level,strain,doubled,declarer,tricks,lead,status,nsScore,N,E,S,W,split,originKey,updatedAt,miniBridge';
 export function exportResultsCsv(results: Result[]) {
-  const cell = (v: string | number) => `"${String(v).replaceAll('"', '""')}"`;
   return (
     csvHeader +
     '\n' +
@@ -231,8 +236,11 @@ export function exportResultsCsv(results: Result[]) {
           r.nsScore,
           ...seats.map((s) => r.playerNames[s] || ''),
           r.split ? JSON.stringify(r.split) : '',
+          r.originKey ?? '',
+          r.updatedAt,
+          r.miniBridge === undefined ? '' : String(r.miniBridge),
         ]
-          .map(cell)
+          .map(csvCell)
           .join(','),
       )
       .join('\n')

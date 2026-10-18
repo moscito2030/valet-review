@@ -1,5 +1,5 @@
 import { withIdentity } from './identity';
-import { validateDataset, type Dataset, type Board } from './model';
+import { validateDataset, type Dataset, type Board, type Result } from './model';
 import { storageKey } from './remove-board';
 
 const sameBoard = (a: Board, b: Board) => a.number === b.number && a.dealer === b.dealer && a.vulnerability === b.vulnerability &&
@@ -10,10 +10,39 @@ function availableId(id: string, used: Set<string>) {
   while (used.has(`${id.slice(0, 100)}~${n}`)) n++;
   return `${id.slice(0, 100)}~${n}`;
 }
-export function appendToBrowser(current: Dataset, storage: Pick<Storage, 'getItem' | 'setItem'>): Dataset {
+export function restoreBrowserLibrary(raw: string): Dataset {
+  return withIdentity(validateDataset(JSON.parse(raw)));
+}
+export class StorageConflict extends Error {
+  constructor() { super('相同來源的成績不同，且無法判斷新舊；請選擇保留本機或使用目前內容'); }
+}
+export type ConflictChoice = 'ask' | 'saved' | 'incoming';
+function scoreContent(r: Result) {
+  return JSON.stringify([r.status, r.level, r.strain, r.doubled, r.declarer, r.tricks,
+    r.lead, r.nsScore, r.miniBridge ?? false, r.split ?? null, r.table,
+    r.playerNames.N, r.playerNames.E, r.playerNames.S, r.playerNames.W]);
+}
+function mergeResult(saved: Result, incoming: Result, choice: ConflictChoice): Result {
+  const oldTime = Date.parse(saved.updatedAt), newTime = Date.parse(incoming.updatedAt);
+  if (Number.isFinite(oldTime) && Number.isFinite(newTime) && newTime < oldTime) return saved;
+  const named = Object.values(incoming.playerNames).some(Boolean);
+  const next = { ...incoming, assignmentId: saved.assignmentId,
+    table: named ? incoming.table : saved.table,
+    playerNames: named ? incoming.playerNames : saved.playerNames };
+  const same = scoreContent(saved) === scoreContent(next);
+  const newer = Number.isFinite(oldTime) && Number.isFinite(newTime) && newTime > oldTime;
+  if (!newer && same) return saved;
+  if (!newer) {
+    if (choice === 'ask') throw new StorageConflict();
+    if (choice === 'saved') return saved;
+  }
+  // Anonymous shares must not erase the saved seating metadata.
+  return next;
+}
+export function appendToBrowser(current: Dataset, storage: Pick<Storage, 'getItem' | 'setItem'>, choice: ConflictChoice = 'ask'): Dataset {
   const incoming = withIdentity(current);
   const raw = storage.getItem(storageKey);
-  const saved = raw ? withIdentity(validateDataset(JSON.parse(raw))) : validateDataset({ version: 1, boards: [], results: [] });
+  const saved = raw ? restoreBrowserLibrary(raw) : validateDataset({ version: 1, boards: [], results: [] });
   const boards = [...saved.boards], results = [...saved.results];
   const boardIds = new Set(boards.map(b => b.id)), resultIds = new Set(results.map(r => r.id));
   const mapping = new Map<string, string>();
@@ -30,7 +59,7 @@ export function appendToBrowser(current: Dataset, storage: Pick<Storage, 'getIte
     const existing = results.findIndex(r => r.boardId === boardId && r.originKey === result.originKey);
     const id = existing >= 0 ? results[existing].id : availableId(result.id, resultIds);
     const next = { ...result, id, boardId };
-    if (existing >= 0) results[existing] = next;
+    if (existing >= 0) results[existing] = mergeResult(results[existing], next, choice);
     else { results.push(next); resultIds.add(id); }
     if (result.id === incoming.selectedResultId) selectedResultId = id;
   }

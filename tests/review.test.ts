@@ -30,8 +30,7 @@ test('full PBN and CSV export/import preserve board data and cancelled scores', 
         [...boards.boards[i].deal[seat]].sort(),
         [...data.boards[i].deal[seat]].sort(),
       );
-  // Explicit board IDs remain local to the JSON collection. Number-only CSV attaches to new PBN IDs.
-  const csv = exportResultsCsv(data.results.map((r) => ({ ...r, boardId: `board:${r.board}` })));
+  const csv = exportResultsCsv(data.results);
   const restored = importResultsCsv(csv, boards);
   assert.deepEqual(
     restored.results.map((r) => r.nsScore),
@@ -73,7 +72,7 @@ test('different deals sharing a board number must have separate groups', () => {
   const data = demoDataset();
   const a = data.boards[0],
     b = { ...data.boards[1], number: 1 };
-  assert.throws(() => importPbn(exportPbn([a, b])), /BridgeboardGroup/);
+  assert.throws(() => importPbn(exportPbn([a, b]).replace(/\[ValetBoardId[^\n]+\n/g, '')), /BridgeboardGroup/);
   const separate = importPbn(
     exportPbn([
       { ...a, group: 'A' },

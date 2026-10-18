@@ -1,3 +1,4 @@
+import { decodeCsvCell } from './csv-cell';
 export function parseCsv(text: string): Record<string, string>[] {
   if (text.length > 2000000) throw new Error('CSV 超過 2 MB 上限');
   const rows: string[][] = [];
@@ -31,6 +32,6 @@ export function parseCsv(text: string): Record<string, string>[] {
   if (new Set(header).size !== header.length) throw new Error('CSV 標題不可重複');
   return rows.map((r, i) => {
     if (r.length !== header.length) throw new Error(`第 ${i + 2} 列欄位數不正確`);
-    return Object.fromEntries(header.map((h, j) => [h, r[j]]));
+    return Object.fromEntries(header.map((h, j) => [h, decodeCsvCell(r[j])]));
   });
 }

@@ -14,7 +14,7 @@ test('append preserves saved boards, resolves collisions and repeated saves upda
   assert.equal(merged.boards.length, 4);
   assert.equal(merged.results.length, 20);
   incoming.results[0].nsScore = 123;
-  const again = appendToBrowser(incoming, storage);
+  const again = appendToBrowser(incoming, storage, 'incoming');
   assert.equal(again.boards.length, 4);
   assert.equal(again.results.length, 20);
   assert.equal(again.results.find(r => r.id === incoming.results[0].id)?.nsScore, demoDataset().results[0].nsScore);

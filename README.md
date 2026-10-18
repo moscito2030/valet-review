@@ -36,11 +36,11 @@ Open `http://127.0.0.1:3001`. This leaves port 3000 available for Valet.
 
 ## Saving and removing boards
 
-Use **Save review (儲存檢討)** to save explicitly to browser local storage. Saved data belongs to that browser and website origin. Trial-play steps are temporary and are not saved.
+Use **Save to browser (儲存至瀏覽器)** to save explicitly to browser local storage. Saved data belongs to that browser and website origin. Trial-play steps are temporary and are not saved.
 
 Importing PBN or JSON replaces the open collection. Importing CSV replaces the entire results list while retaining the deals. Export JSON first if you need to keep another review.
 
-**Remove this board (移除此牌)** sits beside Save review. After confirmation, it removes the current deal and all its results, then saves the remaining collection locally, replacing the previous save. Removing the last board leaves an empty review that stays empty after reloading. If the browser rejects the save, removal does not take effect.
+**Remove this board (移除此牌)** sits beside Save to browser. After confirmation, it removes the current deal and its results from the open collection and browser library, preserving other saved boards outside the current view. Removing the last board leaves an empty review that stays empty after reloading. If the browser rejects the save, removal does not take effect.
 
 ## Results CSV
 
@@ -58,7 +58,7 @@ board,table,level,strain,doubled,declarer,tricks,lead,status,N,E,S,W
 - `status`: played or cancelled. Cancelled rows may omit contract fields and are excluded from scoring comparisons. Legacy `average` values are read as `cancelled`; exports consistently use `cancelled`.
 - `nsScore`: optional. If omitted, the score is calculated from the contract and vulnerability. If supplied, it is treated as the table's assigned NS raw score.
 - `assignmentId` and `id`: optional identifiers from the source system. N/E/S/W contain player names.
-- CSV, PBN and review JSON files are limited to 2 MB. A collection supports up to 256 boards and 10,000 results.
+- CSV and PBN files are limited to 2 MB; review JSON backups accept up to 32 MB. A collection supports up to 256 boards and 10,000 results.
 
 ## PBN and JSON
 
@@ -139,3 +139,9 @@ On opening Review, a dismissible notice identifies the source: shared URL, brows
 Save to browser appends to existing storage and displays the merged collection. Matching origin keys are deduplicated; matching result origin keys are updated. Different origins are stored separately. Validation or storage failures preserve the prior saved data.
 
 Source identity: opaque originKey values identify boards and results independently of display IDs. Valet hashes stage ID and internal board number with SHA-256; result keys also include assignment identity. Independent imports and legacy data receive UUIDs on opening. JSON, browser storage and anonymous shares preserve these keys; PBN preserves board identity using ValetOrigin. Reimporting legacy files without identity creates a new source. Append matches origin keys and rejects conflicting deals without overwriting storage.
+
+### Storage and interchange safeguards
+
+Browser saves append by source identity. Dated results retain the newer version; different results with equal or missing timestamps require an explicit conflict choice before anything is written. Anonymous shares retain timestamps and do not erase stored player names. Browser libraries are validated by the dataset schema rather than the upload size cap; quota failures leave existing storage intact. JSON backups accept up to 32 MB (PBN/CSV: 2 MB; 256 boards/10,000 results).
+
+PBN exports preserve local IDs in ValetBoardId and source IDs in ValetOrigin, allowing the matching CSV to be imported without ID edits. CSV preserves result originKey, updatedAt and miniBridge (true/false), escapes spreadsheet formulas reversibly, and keeps negative scores numeric. Review passes MiniBridge mode to the viewer; DDS analysis refreshes when dealer or vulnerability changes as well as hands or board number.

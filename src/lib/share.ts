@@ -62,7 +62,7 @@ export function singleBoard(
   return validateDataset({
     version: 1,
     boards: [sharedBoard],
-    results: results.map((r) => ({ ...r, boardId: sharedBoard.id, updatedAt: '' })),
+    results: results.map((r) => ({ ...r, boardId: sharedBoard.id })),
     selectedBoardId: sharedBoard.id,
     selectedResultId: index < 0 ? undefined : results[index].id,
   });

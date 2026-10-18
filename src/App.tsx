@@ -1,5 +1,5 @@
 import { withIdentity } from './lib/identity';
-import { appendToBrowser } from './lib/browser-storage';
+import { appendToBrowser, restoreBrowserLibrary, StorageConflict, type ConflictChoice } from './lib/browser-storage';
 import { AppVersion } from './components/app-version';
 import { useEffect, useState } from 'react';
 import {
@@ -28,7 +28,7 @@ import {
   importJson,
   importPbn,
   importResultsCsv,
-  MAX_FILE_BYTES,
+  MAX_FILE_BYTES, MAX_JSON_FILE_BYTES,
 } from './lib/imports';
 import { decodeShare, encodeShare, singleBoard } from './lib/share';
 import { removeAndSaveBoard, storageKey } from './lib/remove-board';
@@ -56,7 +56,7 @@ export default function App() {
   const [selection, setSelection] = useState(0);
   const [comparison, setComparison] = useState<string[]>([]);
   const [metric, setMetric] = useState<'butler' | 'crossimp' | 'mp'>('butler');
-  const [modal, setModal] = useState<'import' | 'share' | 'help' | 'export' | 'remove' | null>(null);
+  const [modal, setModal] = useState<'import' | 'share' | 'help' | 'export' | 'remove' | 'save-conflict' | null>(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,6 +68,17 @@ export default function App() {
   const [link, setLink] = useState('');
   const [working, setWorking] = useState(false);
   const [popupError, setPopupError] = useState('');
+  function saveToBrowser(choice: ConflictChoice = 'ask') {
+    try {
+      const merged = appendToBrowser(snapshot(), localStorage, choice);
+      load(merged);
+      setModal(null);
+      setNotice('已追加儲存至此瀏覽器；保留較新成績，無法判斷新舊的差異依你的選擇處理。');
+    } catch (error) {
+      if (error instanceof StorageConflict) { setPopupError(''); setModal('save-conflict'); }
+      else { setError(`儲存失敗，原本的儲存資料未變更：${(error as Error).message}。可改匯出檢討檔。`); setModal(null); }
+    }
+  }
   function load(next: Dataset) {
     next = withIdentity(next);
     setData(next);
@@ -102,8 +113,9 @@ export default function App() {
         try {
           const saved = localStorage.getItem(storageKey);
           if (saved) {
-            const restored = withIdentity(importJson(saved));
-            localStorage.setItem(storageKey, JSON.stringify(restored));
+            const restored = restoreBrowserLibrary(saved);
+            // A quota/read-only failure must not hide an otherwise readable library.
+            try { localStorage.setItem(storageKey, JSON.stringify(restored)); } catch { /* keep readable data */ }
             load(restored);
             setNotice('牌局來源：本機儲存。已載入此瀏覽器上次儲存的檢討。');
           } else {
@@ -153,8 +165,8 @@ export default function App() {
     if (!file) return;
     setPreview(undefined);
     setPopupError('');
-    if (file.size > MAX_FILE_BYTES) {
-      setPopupError('檔案超過 2 MB 上限');
+    if (file.size > (kind === 'json' ? MAX_JSON_FILE_BYTES : MAX_FILE_BYTES)) {
+      setPopupError(`檔案超過 ${kind === 'json' ? 32 : 2} MB 上限`);
       return;
     }
     try {
@@ -296,15 +308,7 @@ export default function App() {
                 {String(index + 1).padStart(2, '0')} / {String(data.boards.length).padStart(2, '0')}
               </span>
               <div className="review-actions"><button
-                onClick={() => {
-                  try {
-                    const merged = appendToBrowser(snapshot(), localStorage);
-                    load(merged);
-                    setNotice('已追加儲存至此瀏覽器；相同牌局的既有成績已更新。需要跨裝置保存時，請匯出檢討檔。');
-                  } catch (error) {
-                    setError(`儲存失敗，原本的儲存資料未變更：${(error as Error).message}。可改匯出檢討檔。`);
-                  }
-                }}
+                onClick={() => saveToBrowser()}
               >
                 <Bookmark size={15} />
                 儲存至瀏覽器
@@ -335,6 +339,7 @@ export default function App() {
                 <DealExplorer
                   key={board.id}
                   board={board}
+                  boardResults={results}
                   result={selected ? directionalResult(selected, side) : undefined}
                   resultSelection={selection}
                   tableSelected={!!selected}
@@ -522,11 +527,20 @@ export default function App() {
               export: '匯出檢討資料',
               share: `分享第 ${board?.number ?? ''} 副`,
               remove: '移除此牌',
+              'save-conflict': '成績版本衝突',
               help: '從比較到試打',
             }[modal]
           }
           close={() => setModal(null)}
         >
+          {modal === 'save-conflict' && <>
+            <p>相同來源的成績內容不同，時間資訊不足或相同，無法判斷哪份較新。原本儲存尚未變更。</p>
+            <p>以下選擇只套用於無法判斷新舊的差異；已知較舊的成績仍不會覆蓋較新的成績。</p>
+            <div className="button-row">
+              <button onClick={() => saveToBrowser('saved')}>保留本機成績並追加其他資料</button>
+              <button onClick={() => saveToBrowser('incoming')}>使用目前成績並儲存</button>
+            </div>
+          </>}
           {modal === 'remove' && board && (
             <>
               <p>移除{board.group ? `「${board.group}」的` : ''}第 {board.number} 副牌及其 {results.length} 筆成績？</p>
@@ -569,7 +583,7 @@ export default function App() {
                 </select>
               </label>
               <label className="field">
-                選擇檔案（最多 2 MB）
+                選擇檔案（PBN／CSV 最多 2 MB，JSON 最多 32 MB）
                 <input
                   type="file"
                   accept={kind === 'pbn' ? '.pbn,.txt' : kind === 'csv' ? '.csv,.txt' : '.json'}
@@ -795,7 +809,7 @@ export default function App() {
               </p>
               <h3>保存與分享</h3>
               <p>
-                匯入只在瀏覽器處理。按「儲存至瀏覽器」保留到這台裝置；匯出 JSON
+                匯入只在瀏覽器處理。按「儲存至瀏覽器」追加資料，保留較新的成績；無法判斷新舊的差異會請你選擇。匯出 JSON
                 可完整備份。網址分享只包含當前單副與選擇的桌次，無需帳號或資料庫。若牌號重複，請用
                 PBN BridgeboardGroup 或 JSON boardId 區分。
               </p>
