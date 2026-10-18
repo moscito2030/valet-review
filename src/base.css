@@ -165,7 +165,7 @@ main {
   margin-bottom: 30px;
 }
 .intro p:last-child {
-  margin-bottom: 0;
+  margin: 0;
   font-size: 13px;
 }
 .eyebrow {

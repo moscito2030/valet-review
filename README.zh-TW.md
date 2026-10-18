@@ -58,7 +58,7 @@ board,table,level,strain,doubled,declarer,tricks,lead,status,N,E,S,W
 - `assignmentId`、`id` 可保存原系統的識別碼；N/E/S/W 可帶入入座姓名。
 - CSV、PBN 與檢討 JSON 檔案上限皆為 2 MB。每份資料最多 256 副、10,000 筆成績。
 
-完整 JSON 是版本化的 `version: 1` 格式，包含 `title`、`boards`、`results` 及選定牌局／桌次。請用「匯出完整檢討 JSON」取得可直接重匯的範例；驗證規則在 `src/lib/model.ts`。
+完整 JSON 是版本化的 `version: 1` 格式，包含 `boards`、`results` 及選定牌局／桌次。舊檔案的 `title` 為選填相容資料，不在介面顯示；上方僅保留牌數、成績筆數與操作按鈕，不區分牌局來源標題。請用「匯出完整檢討 JSON」取得可直接重匯的範例；驗證規則在 `src/lib/model.ts`。
 
 PBN 支援完整 Deal、Board、Dealer、Vulnerable、BridgeboardGroup，以及每筆紀錄的 Contract／Declarer／Result 與四家姓名。相同牌型的重複 Board 紀錄會合併，成績各自保留；相同牌號但不同牌型需有不同分組。PBN 匯出只保存牌型，保存全部結果請用 JSON。
 

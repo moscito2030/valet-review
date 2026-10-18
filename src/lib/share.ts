@@ -61,7 +61,6 @@ export function singleBoard(
   const sharedBoard = names ? board : { ...board, id: `board:${board.number}`, group: undefined };
   return validateDataset({
     version: 1,
-    title: names ? data.title : `第 ${board.number} 副檢討`,
     boards: [sharedBoard],
     results: results.map((r) => ({ ...r, boardId: sharedBoard.id, updatedAt: '' })),
     selectedBoardId: sharedBoard.id,

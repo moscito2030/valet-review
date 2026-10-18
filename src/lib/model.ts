@@ -61,7 +61,7 @@ export type ResultInput = Pick<
 export const datasetSchema = z
   .object({
     version: z.literal(1),
-    title: z.string().trim().min(1).max(160),
+    title: z.string().trim().min(1).max(160).optional(),
     boards: z.array(boardSchema).max(256),
     results: z.array(resultSchema).max(10000),
     selectedBoardId: z.string().max(120).optional(),

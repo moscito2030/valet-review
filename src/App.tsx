@@ -195,8 +195,6 @@ export default function App() {
       <main>
         <section className="intro">
           <div>
-            <p className="eyebrow">POST-GAME REVIEW · 賽後檢討</p>
-            <h1>{data.title}</h1>
             <p className="muted">
               {data.boards.length} 副牌 · {data.results.length} 筆成績
             </p>
@@ -577,7 +575,7 @@ export default function App() {
                       ? '[Board "1"]\n[Dealer "N"]\n[Vulnerable "None"]\n[Deal "N:..."]'
                       : kind === 'csv'
                         ? csvHeader
-                        : '{ "version": 1, "title": "我的檢討", "boards": [...], "results": [...] }'
+                        : '{ "version": 1, "boards": [...], "results": [...] }'
                   }
                 />
               </label>
@@ -712,7 +710,7 @@ export default function App() {
                     setLink('');
                   }}
                 />
-                包含選手姓名、原始桌名與檢討名稱
+                包含選手姓名與原始桌名
               </label>
               <div className="share-note">
                 <Info size={19} />

@@ -62,7 +62,7 @@ board,table,level,strain,doubled,declarer,tricks,lead,status,N,E,S,W
 
 ## PBN and JSON
 
-Review JSON uses the versioned `version: 1` format, including `title`, `boards`, `results` and optional board/table selection. Export a complete review JSON for a directly reusable example. Validation is defined in [src/lib/model.ts](src/lib/model.ts).
+Review JSON uses the versioned `version: 1` format, including `boards`, `results` and optional board/table selection. Legacy `title` metadata is optional and is not displayed; the toolbar shows board and result counts without a source heading. Export a complete review JSON for a directly reusable example. Validation is defined in [src/lib/model.ts](src/lib/model.ts).
 
 PBN supports complete Deal, Board, Dealer, Vulnerable and BridgeboardGroup tags, plus Contract, Declarer, Result and player names per record. Repeated board records with the same deal are merged while retaining their results. Different deals with the same board number require different groups. PBN export contains deals only; use JSON to preserve all results.
 
