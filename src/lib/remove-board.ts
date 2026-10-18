@@ -16,8 +16,20 @@ export function removeBoard(data: Dataset, boardId: string): Dataset {
 }
 
 // Persist before updating the screen; storage failures leave the current review intact.
-export function removeAndSaveBoard(data: Dataset, boardId: string, storage: Pick<Storage, 'setItem'>): Dataset {
+export function removeAndSaveBoard(data: Dataset, boardId: string, storage: Pick<Storage, 'setItem'> & Partial<Pick<Storage, 'getItem'>>): Dataset {
   const next = removeBoard(data, boardId);
-  storage.setItem(storageKey, JSON.stringify(next));
+  let persisted = next;
+  if (storage.getItem) {
+    const raw = storage.getItem(storageKey);
+    const saved = raw ? validateDataset(JSON.parse(raw)) : undefined;
+    const target = data.boards.find(b => b.id === boardId)!;
+    const stored = saved?.boards.find(b => b.id === boardId);
+    // Removing a board from an imported/shared view must not replace the saved library.
+    if (saved) {
+      persisted = stored && JSON.stringify(stored) === JSON.stringify(target)
+        ? removeBoard(saved, boardId) : saved;
+    }
+  }
+  storage.setItem(storageKey, JSON.stringify(persisted));
   return next;
 }

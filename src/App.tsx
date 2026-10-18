@@ -1,3 +1,4 @@
+import { appendToBrowser } from './lib/browser-storage';
 import { AppVersion } from './components/app-version';
 import { useEffect, useState } from 'react';
 import {
@@ -293,15 +294,16 @@ export default function App() {
               <div className="review-actions"><button
                 onClick={() => {
                   try {
-                    localStorage.setItem(storageKey, JSON.stringify(snapshot()));
-                    setNotice('已儲存於此瀏覽器。需要跨裝置保存時，請匯出檢討檔。');
-                  } catch {
-                    setError('本機空間不足或瀏覽器禁止儲存，請改匯出檢討檔。');
+                    const merged = appendToBrowser(snapshot(), localStorage);
+                    load(merged);
+                    setNotice('已追加儲存至此瀏覽器；相同牌局的既有成績已更新。需要跨裝置保存時，請匯出檢討檔。');
+                  } catch (error) {
+                    setError(`儲存失敗，原本的儲存資料未變更：${(error as Error).message}。可改匯出檢討檔。`);
                   }
                 }}
               >
                 <Bookmark size={15} />
-                儲存檢討
+                儲存至瀏覽器
               </button>
               <button className="remove-board-button" onClick={() => open('remove')}>
                 <Trash2 size={15} />移除此牌
@@ -645,7 +647,7 @@ export default function App() {
                       history.replaceState(null, '', location.pathname + location.search);
                       setModal(null);
                       setSource('');
-                      setNotice('匯入完成。可儲存檢討到本機，或匯出完整檢討檔。');
+                      setNotice('匯入完成。可儲存至瀏覽器到本機，或匯出完整檢討檔。');
                     }}
                   >
                     確認匯入
@@ -789,7 +791,7 @@ export default function App() {
               </p>
               <h3>保存與分享</h3>
               <p>
-                匯入只在瀏覽器處理。按「儲存檢討」保留到這台裝置；匯出 JSON
+                匯入只在瀏覽器處理。按「儲存至瀏覽器」保留到這台裝置；匯出 JSON
                 可完整備份。網址分享只包含當前單副與選擇的桌次，無需帳號或資料庫。若牌號重複，請用
                 PBN BridgeboardGroup 或 JSON boardId 區分。
               </p>
