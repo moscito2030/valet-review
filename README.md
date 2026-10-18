@@ -133,3 +133,5 @@ npm run sync -- ../alternative_online_bridge ../valet-review
 Run this command from Valet Viewer. Validate all three projects and commit each repository. Pushes remain a separate, explicitly authorized step.
 
 The footer shows the deployed commit (first seven characters), linking to GitHub; hover for the full hash and commit message. Vercel injects this at build time. Local builds show a development label; deployments without Git metadata show an unavailable label.
+
+On opening Review, a dismissible notice identifies the source: shared URL, browser storage, or demo boards. URL data takes precedence over storage. Missing storage or failed loading falls back to demo boards, with a failure notice where applicable.

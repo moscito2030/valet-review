@@ -119,3 +119,5 @@ npm run build
 修改檢視器請到 Valet Viewer，升版並執行 `npm run sync -- ../alternative_online_bridge ../valet-review`。三個專案都需驗證並各自 commit，未經使用者指定不 push。
 
 頁尾顯示部署 commit 前七碼，可點擊查看 GitHub 提交；滑鼠停留可看完整 hash 與 commit message。版本資訊由 Vercel 在建置時注入，本機顯示「本機開發版」，部署缺少 Git 資訊時顯示「版本資訊未提供」。
+
+開啟 Review 時會顯示可關閉的牌局來源提示：網址分享、本機儲存或示範牌局。網址資料優先於本機儲存；沒有儲存資料或讀取失敗時顯示示範牌局，讀取失敗會另說明原因。

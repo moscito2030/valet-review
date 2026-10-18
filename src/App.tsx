@@ -84,10 +84,14 @@ export default function App() {
           const shared = await decodeShare(location.hash);
           if (current === generation) {
             load(shared);
-            setNotice('已開啟分享牌局。所有內容只在此瀏覽器處理。');
+            setNotice('牌局來源：網址分享。所有內容只在此瀏覽器處理。');
           }
         } catch (e) {
-          if (current === generation) setError((e as Error).message);
+          if (current === generation) {
+            load(demoDataset());
+            setError((e as Error).message);
+            setNotice('牌局來源：示範牌局。網址分享資料無法讀取。');
+          }
         } finally {
           if (current === generation) setLoading(false);
         }
@@ -96,10 +100,14 @@ export default function App() {
           const saved = localStorage.getItem(storageKey);
           if (saved) {
             load(importJson(saved));
-            setNotice('已載入上次儲存的檢討。');
+            setNotice('牌局來源：本機儲存。已載入此瀏覽器上次儲存的檢討。');
+          } else {
+            load(demoDataset());
+            setNotice('牌局來源：示範牌局。目前沒有本機儲存的檢討。');
           }
         } catch {
-          setNotice('無法讀取本機檢討，已顯示示範牌局。');
+          load(demoDataset());
+          setNotice('牌局來源：示範牌局。本機儲存的檢討無法讀取。');
         }
       }
     }
@@ -493,7 +501,7 @@ export default function App() {
             onClick={() => {
               load(demoDataset());
               history.replaceState(null, '', location.pathname + location.search);
-              setNotice('已開啟示範牌局；本機儲存的檢討未變更。');
+              setNotice('牌局來源：示範牌局。本機儲存的檢討未變更。');
             }}
           >
             開啟示範
