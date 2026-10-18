@@ -1,3 +1,4 @@
+import { AppVersion } from './components/app-version';
 import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
@@ -485,7 +486,7 @@ export default function App() {
         )}
         <footer>
           <span>
-            ♦ VALET REVIEW <span className="muted">／ 從結果，回到每一次選擇。</span>
+            <AppVersion /> <span className="muted">／ 從結果，回到每一次選擇。</span>
           </span>
           <button
             className="text-button"

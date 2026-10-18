@@ -673,3 +673,5 @@ textarea {
   .metric-full { display: none; }
   .metric-short { display: inline; }
 }
+
+.app-version { color: inherit; overflow-wrap: anywhere; }

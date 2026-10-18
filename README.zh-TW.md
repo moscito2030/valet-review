@@ -117,3 +117,5 @@ npm run build
 本專案使用獨立 Valet Viewer 倉庫維護的 `@valet/deal-viewer`，透過 vendor/ 內固定版本打包檔安裝。沒有指向其他倉庫的本機連結，因此可獨立 npm ci、建置與部署。
 
 修改檢視器請到 Valet Viewer，升版並執行 `npm run sync -- ../alternative_online_bridge ../valet-review`。三個專案都需驗證並各自 commit，未經使用者指定不 push。
+
+頁尾顯示部署 commit 前七碼，可點擊查看 GitHub 提交；滑鼠停留可看完整 hash 與 commit message。版本資訊由 Vercel 在建置時注入，本機顯示「本機開發版」，部署缺少 Git 資訊時顯示「版本資訊未提供」。
